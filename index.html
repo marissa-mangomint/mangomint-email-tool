@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mangomint Onboarding Email Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #8B9FED 0%, #C195E8 40%, #F5A6D0 70%, #FFD0B5 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #8B9FED 0%, #C195E8 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .version-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.95;
+            font-size: 15px;
+        }
+        
+        .mango-emoji {
+            font-size: 40px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .content {
+            padding: 35px;
+        }
+        
+        .ai-status {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .ai-status h3 {
+            color: #92400e;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .ai-status p {
+            color: #78350f;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        
+        .ai-status.ready {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+        
+        .ai-status.ready h3 {
+            color: #16a34a;
+        }
+        
+        .ai-status.ready p {
+            color: #15803d;
+        }
+        
+        .ai-status.error {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+        
+        .ai-status.error h3 {
+            color: #991b1b;
+        }
+        
+        .ai-status.error p {
+            color: #7f1d1d;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            border-radius: 4px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(146, 64, 14, 0.2);
+            border-top-color: #92400e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+        }
+        
+        .form-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-section input,
+        .form-section select,
+        .form-section textarea {
+            width: 100%;
+            padding: 13px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .form-section input:focus,
+        .form-section select:focus,
+        .form-section textarea:focus {
+            outline: none;
+            border-color: #E54B97;
+            box-shadow: 0 0 0 3px rgba(229, 75, 151, 0.1);
+        }
+        
+        .form-section textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-extract {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .btn-extract:hover:not(:disabled) {
+            background: #4f46e5;
+            transform: translateY(-2px);
+        }
+        
+        .btn-generate {
+            background: linear-gradient(135deg, #E54B97 0%, #D43D8A 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(229, 75, 151, 0.3);
+        }
+        
+        .btn-generate:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(229, 75, 151, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .output-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: #fef8f4;
+            border-radius: 12px;
+            border: 2px solid #ffe8dc;
+            display: none;
+        }
+        
+        .output-section.show {
+            display: block;
+        }
+        
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .output-header h3 {
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-copy, .btn-superhuman {
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-copy {
+            background: #10b981;
+        }
+        
+        .btn-copy:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .btn-copy.copied {
+            background: #6366f1;
+        }
+        
+        .btn-superhuman {
+            background: linear-gradient(135deg, #E54B97 0%, #D43D8A 100%);
+        }
+        
+        .btn-superhuman:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(229, 75, 151, 0.3);
+        }
+        
+        .email-output {
+            background: white;
+            padding: 22px;
+            border-radius: 10px;
+            border: 1px solid #e8e8e8;
+            white-space: pre-wrap;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #333;
+        }
+        
+        .conditional-field {
+            display: none;
+        }
+        
+        .conditional-field.show {
+            display: block;
+        }
+        
+        .extracted-box {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .extracted-box.show {
+            display: block;
+        }
+        
+        .extracted-box h4 {
+            color: #16a34a;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .extracted-item {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="version-badge">v2.0 AI</span>
+            <h1><span class="mango-emoji">🥭</span> Onboarding Email Generator</h1>
+            <p>AI-powered • Free forever • Works offline</p>
+        </div>
+        
+        <div class="content">
+            <!-- AI Loading Status -->
+            <div id="aiStatus" class="ai-status">
+                <div class="loading-spinner"></div>
+                <h3>Loading AI Model...</h3>
+                <p>First time only: downloading ~50MB model. This happens once, then runs offline forever.</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText" style="margin-top: 10px; font-size: 12px;">Initializing...</p>
+            </div>
+            
+            <div class="two-col">
+                <div class="form-section">
+                    <label for="omName">Your Name</label>
+                    <input type="text" id="omName" placeholder="e.g., Amie Hough">
+                    <div class="help-text">Saved and remembered</div>
+                </div>
+                
+                <div class="form-section">
+                    <label for="companyName">Customer's Company Name</label>
+                    <input type="text" id="companyName" placeholder="e.g., Luxe Salon & Spa">
+                    <div class="help-text">Fill in manually or let AI extract</div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <label for="transcript">📋 Paste Call Transcript</label>
+                <textarea id="transcript" placeholder="Paste your Momentum call transcript here...
+
+AI will intelligently extract:
+✓ Customer first name
+✓ Company name (if mentioned)
+✓ Launch date
+✓ Detailed action items with full context
+✓ Due dates and dependencies"></textarea>
+                <button type="button" class="btn btn-extract" id="extractBtn" onclick="extractWithAI()" disabled>
+                    <span class="loading-spinner" style="display: none;"></span>
+                    <span id="extractBtnText">🤖 Extract with AI</span>
+                </button>
+            </div>
+            
+            <!-- Extracted info display -->
+            <div id="extractedInfo" class="extracted-box">
+                <h4>✓ AI Extracted:</h4>
+                <div class="extracted-item"><strong>Customer:</strong> <span id="displayCustomer"></span></div>
+                <div class="extracted-item"><strong>Company:</strong> <span id="displayCompany"></span></div>
+                <div class="extracted-item"><strong>Launch Date:</strong> <span id="displayLaunchDate"></span></div>
+                <div class="extracted-item"><strong>Action Items:</strong> <span id="displayActions"></span></div>
+            </div>
+            
+            <!-- Hidden fields -->
+            <input type="hidden" id="customerFirstName">
+            <input type="hidden" id="launchDate">
+            
+            <div class="form-section">
+                <label for="emailTemplate">Email Template</label>
+                <select id="emailTemplate" onchange="updateFields()">
+                    <option value="followup1">Follow-up | OB Call 1</option>
+                    <option value="followup2">Follow-up | OB Call 2</option>
+                    <option value="call1_scheduled">OB Call 1 Scheduled</option>
+                    <option value="missed_launch">Missed Launch Date</option>
+                    <option value="kickoff">Kickoff Meeting Confirmation</option>
+                    <option value="training">Training Session Reminder</option>
+                    <option value="data_request">Data Request</option>
+                </select>
+            </div>
+            
+            <!-- Conditional fields -->
+            <div class="form-section conditional-field" id="actionItemsField">
+                <label for="actionItems">Action Items (AI-extracted or edit)</label>
+                <textarea id="actionItems" placeholder="AI will extract detailed action items with context..."></textarea>
+                <div class="help-text">AI extracts specific, contextual action items. Links added automatically!</div>
+            </div>
+            
+            <div class="form-section conditional-field" id="meetingDetailsField">
+                <label for="meetingDateTime">Meeting Date & Time</label>
+                <input type="text" id="meetingDateTime" placeholder="e.g., Tuesday, March 15th at 2:00 PM EST">
+            </div>
+            
+            <div class="form-section conditional-field" id="meetingLinkField">
+                <label for="meetingLink">Meeting Link</label>
+                <input type="text" id="meetingLink" placeholder="e.g., zoom.us/j/123456789">
+            </div>
+            
+            <div class="form-section conditional-field" id="callRecordingField">
+                <label for="callRecording">Call Recording Link (Optional)</label>
+                <input type="text" id="callRecording" placeholder="https://...">
+            </div>
+            
+            <button class="btn btn-generate" onclick="generateEmail()">✨ Generate Email</button>
+            
+            <div class="output-section" id="outputSection">
+                <div class="output-header">
+                    <h3>Your Email:</h3>
+                    <div class="button-group">
+                        <button class="btn-copy" onclick="copyEmail()">📋 Copy</button>
+                        <button class="btn-superhuman" onclick="openInSuperhuman()">⚡ Copy & Open Superhuman</button>
+                    </div>
+                </div>
+                <div class="email-output" id="emailOutput"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+        
+        let engine = null;
+        let isAIReady = false;
+        
+        // Initialize AI
+        async function initAI() {
+            const statusEl = document.getElementById('aiStatus');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const extractBtn = document.getElementById('extractBtn');
+            
+            try {
+                engine = await CreateMLCEngine("Phi-3.5-mini-instruct-q4f16_1-MLC", {
+                    initProgressCallback: (progress) => {
+                        if (progress.progress) {
+                            const percent = Math.round(progress.progress * 100);
+                            progressFill.style.width = percent + '%';
+                            progressText.textContent = `${percent}% - ${progress.text || 'Loading...'}`;
+                        }
+                    }
+                });
+                
+                isAIReady = true;
+                statusEl.className = 'ai-status ready';
+                statusEl.innerHTML = '<h3>✅ AI Ready!</h3><p>Extracts detailed action items with context. Works offline. Free forever.</p>';
+                extractBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('AI init error:', error);
+                statusEl.className = 'ai-status error';
+                statusEl.innerHTML = '<h3>⚠️ AI Failed to Load</h3><p>This tool requires hosting on a web server (like GitHub Pages). Opening the HTML file directly will not work.</p><p style="margin-top: 10px;"><a href="https://github.com" target="_blank" style="color: #991b1b; font-weight: 600;">Click here to set up free hosting →</a></p>';
+            }
+        }
+        
+        // Make function global
+        window.extractWithAI = async function() {
+            const transcript = document.getElementById('transcript').value;
+            const extractBtn = document.getElementById('extractBtn');
+            const btnText = document.getElementById('extractBtnText');
+            const btnSpinner = extractBtn.querySelector('.loading-spinner');
+            
+            if (!transcript) {
+                alert('Please paste a transcript first');
+                return;
+            }
+            
+            if (!isAIReady) {
+                alert('AI is still loading. Please wait...');
+                return;
+            }
+            
+            try {
+                extractBtn.disabled = true;
+                btnSpinner.style.display = 'inline-block';
+                btnText.textContent = 'AI Thinking...';
+                
+                const prompt = `Analyze this Mangomint onboarding call transcript and extract information. Respond ONLY with valid JSON:
+
+{
+  "customerFirstName": "first name only",
+  "companyName": "business name if mentioned, else null",
+  "launchDate": "launch date if mentioned (format: 'March 2nd'), else null",
+  "actionItems": [
+    "* Very specific action with full context",
+    "* Another action with who/what/when details"
+  ]
+}
+
+Action items rules:
+- Be HIGHLY specific with context (e.g., "Move client transfer earlier due to salon closing, keeping March 2nd launch date")
+- Include who does what
+- Include due dates/timeframes if mentioned
+- Only real, actionable tasks from the call
+- Format with "* " prefix
+- Limit to 5-7 most important items
+
+Transcript:
+${transcript}
+
+JSON only:`;
+
+                const response = await engine.chat.completions.create({
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: 0.1,
+                    max_tokens: 1000,
+                });
+                
+                const content = response.choices[0].message.content;
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                
+                if (!jsonMatch) {
+                    throw new Error('No valid JSON in AI response');
+                }
+                
+                const extracted = JSON.parse(jsonMatch[0]);
+                
+                // Fill fields
+                document.getElementById('customerFirstName').value = extracted.customerFirstName || '';
+                if (extracted.companyName) {
+                    document.getElementById('companyName').value = extracted.companyName;
+                }
+                document.getElementById('launchDate').value = extracted.launchDate || '';
+                
+                if (extracted.actionItems?.length > 0) {
+                    document.getElementById('actionItems').value = extracted.actionItems.join('\n');
+                }
+                
+                // Show results
+                document.getElementById('displayCustomer').textContent = extracted.customerFirstName || 'Not found';
+                document.getElementById('displayCompany').textContent = extracted.companyName || 'Not mentioned';
+                document.getElementById('displayLaunchDate').textContent = extracted.launchDate || 'Not mentioned';
+                document.getElementById('displayActions').textContent = extracted.actionItems?.length > 0 
+                    ? `${extracted.actionItems.length} items extracted` 
+                    : 'None found';
+                
+                document.getElementById('extractedInfo').classList.add('show');
+                updateFields();
+                document.getElementById('emailTemplate').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+            } catch (error) {
+                console.error('Extraction error:', error);
+                alert(`AI extraction failed: ${error.message}\n\nPlease try again.`);
+            } finally {
+                extractBtn.disabled = false;
+                btnSpinner.style.display = 'none';
+                btnText.textContent = '🤖 Extract with AI';
+            }
+        };
+        
+        // Start AI initialization
+        initAI();
+    </script>
+    
+    <script>
+        // Load saved data
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedOmName = localStorage.getItem('omName');
+            if (savedOmName) {
+                document.getElementById('omName').value = savedOmName;
+            }
+            updateFields();
+        });
+        
+        document.getElementById('omName').addEventListener('change', (e) => {
+            localStorage.setItem('omName', e.target.value);
+        });
+        
+        // Learn Center links
+        const learnLinks = {
+            'staff members': 'https://www.mangomint.com/learn/adding-a-staff-member/',
+            'staff': 'https://www.mangomint.com/learn/adding-a-staff-member/',
+            'mangomint pay': 'https://www.mangomint.com/learn/signing-up-for-payment-processing/',
+            'payment processing': 'https://www.mangomint.com/learn/signing-up-for-payment-processing/',
+            'payment': 'https://www.mangomint.com/learn/signing-up-for-payment-processing/',
+            'front desk': 'https://www.mangomint.com/learn/setting-up-your-front-desk-display/',
+            'equipment': 'https://www.mangomint.com/learn/setting-up-your-front-desk-display/',
+            'hardware': 'https://www.mangomint.com/learn/setting-up-your-front-desk-display/',
+            'website': 'https://www.mangomint.com/learn/adding-online-booking-to-your-website/',
+            'online booking': 'https://www.mangomint.com/learn/adding-online-booking-to-your-website/',
+        };
+        
+        function linkActionItems(text) {
+            if (!text) return '';
+            
+            const lines = text.split('\n');
+            return lines.map(line => {
+                if (line.includes('http')) return line;
+                
+                const lineLower = line.toLowerCase();
+                for (const [keyword, url] of Object.entries(learnLinks)) {
+                    if (lineLower.includes(keyword)) {
+                        return line + `\n  ${url}`;
+                    }
+                }
+                return line;
+            }).join('\n');
+        }
+        
+        function updateFields() {
+            const template = document.getElementById('emailTemplate').value;
+            
+            document.querySelectorAll('.conditional-field').forEach(el => {
+                el.classList.remove('show');
+            });
+            
+            if (template === 'followup1' || template === 'followup2' || template === 'missed_launch' || template === 'data_request') {
+                document.getElementById('actionItemsField').classList.add('show');
+            }
+            
+            if (template === 'followup1') {
+                document.getElementById('callRecordingField').classList.add('show');
+            }
+            
+            if (template === 'kickoff' || template === 'training') {
+                document.getElementById('meetingDetailsField').classList.add('show');
+                document.getElementById('meetingLinkField').classList.add('show');
+            }
+        }
+        
+        function generateEmail() {
+            const template = document.getElementById('emailTemplate').value;
+            const firstName = document.getElementById('customerFirstName').value || '[Customer Name]';
+            const companyName = document.getElementById('companyName').value || '[Company Name]';
+            const launchDate = document.getElementById('launchDate').value || '[launch date]';
+            const omName = document.getElementById('omName').value || '[Your Name]';
+            const actionItems = linkActionItems(document.getElementById('actionItems').value);
+            const meetingDateTime = document.getElementById('meetingDateTime').value || '[DATE/TIME]';
+            const meetingLink = document.getElementById('meetingLink').value || '[LINK]';
+            const callRecording = document.getElementById('callRecording').value;
+            
+            let emailContent = '';
+            
+            switch(template) {
+                case 'followup1':
+                    emailContent = `BCC: Onboarding <onboarding@mangomint.com>
+ 
+Subject: Call Recap | ${companyName} x Mangomint
+
+Hi ${firstName},
+
+Thanks for your time this afternoon. It was great to chat with you!
+
+Please refer to your Get Started page to keep you on track for your ${launchDate} launch date. Please check tasks off as you go so I can track your progress. 
+
+Here are some next steps to complete before our next call:
+${actionItems || '* [Add action items]'}
+
+If you need some extra support, here is a step by step of how to set up your Mangomint account 🥭
+https://www.mangomint.com/learn/guide-for-admin-users/
+${callRecording ? `
+Here is a recording of our call for your review: 
+${callRecording}` : ''}
+
+Reach out if you need anything! 🥭
+
+${omName}`;
+                    break;
+                    
+                case 'followup2':
+                    emailContent = `BCC: Onboarding <onboarding@mangomint.com>
+ 
+Subject: You're almost there 🚀 | ${companyName} x Mangomint
+
+Hi ${firstName}!
+
+It was so good to connect with you today!
+
+You're still right on track for your ${launchDate} launch date. Please check your tasks off as you go so I can track your progress. 
+
+Here are some tasks to complete before our next call with some helpful links:
+${actionItems || '* [Add action items]'}
+
+I'll see you soon. Email or text if you have any questions!
+
+${omName}`;
+                    break;
+                    
+                case 'call1_scheduled':
+                    emailContent = `BCC: Onboarding <onboarding@mangomint.com>
+ 
+Subject: Your Onboarding Session | ${companyName} x Mangomint
+
+Hi ${firstName}!
+
+Thank you for booking your onboarding session! I can't wait to chat with you.
+When it's time, simply hop on your computer and join me in the meeting room in your calendar invite.
+
+During our call, we'll start piecing everything together to kickstart your journey with Mangomint. We'll cover everything from transferring your data to setting up payments & POS, and of course, I'll be here to answer any questions you may have.
+
+Need anything before our meeting? Just drop me a line and I'll be happy to help! 😎
+
+Excited to chat soon!
+
+${omName}`;
+                    break;
+                    
+                case 'missed_launch':
+                    emailContent = `BCC: Onboarding <onboarding@mangomint.com>
+ 
+Subject: 🔒 Let's lock in a new launch date
+
+Hey there,
+
+Looks like our original launch date didn't quite stick – no worries! Let's set a new one and realign on the remaining tasks.
+
+Here's what's left to wrap up:
+${actionItems || '* [List remaining tasks]'}
+
+Let me know your thoughts on a new date or any updates, and we'll keep things moving forward.
+
+Best,
+${omName}`;
+                    break;
+                    
+                case 'kickoff':
+                    emailContent = `BCC: Onboarding <onboarding@mangomint.com>
+ 
+Subject: Kickoff Call Scheduled | ${companyName} x Mangomint
+
+Hi ${firstName},
+
+I'm excited to confirm our kickoff meeting for ${companyName}!
+
+📅 Date & Time: ${meetingDateTime}
+🔗 Meeting Link: ${meetingLink}
+
+During this call, we'll walk through your Mangomint account setup, discuss your business processes, review your ${launchDate} launch timeline, and answer any questions.
+
+To make the most of our time, please have ready:
+* Your current booking/scheduling process
+* List of services you offer
+* Staff member names and roles
+
+If this time doesn't work, just let me know!
+
+Looking forward to it! 🥭
+
+${omName}`;
+                    break;
+                    
+                case 'training':
+                    emailContent = `BCC: Onboarding <onboarding@mangomint.com>
+ 
+Subject: Training Session Reminder | ${companyName} x Mangomint
+
+Hi ${firstName},
+
+Friendly reminder about your training session for ${companyName}!
+
+📅 Date & Time: ${meetingDateTime}
+🔗 Meeting Link: ${meetingLink}
+
+We'll cover calendar management, processing payments, client features, and best practices. Please have your team join - the more people attend, the smoother your ${launchDate} launch!
+
+See you soon! 🥭
+
+${omName}`;
+                    break;
+                    
+                case 'data_request':
+                    emailContent = `BCC: Onboarding <onboarding@mangomint.com>
+ 
+Subject: Data Collection | ${companyName} x Mangomint
+
+Hi ${firstName},
+
+As we prepare for your ${launchDate} launch, I need to collect some information:
+
+${actionItems || '* Client list (names, contact info)\n* Service menu with pricing\n* Staff schedules\n* Appointment data to migrate'}
+
+Send in whatever format works best - spreadsheet, CSV, or your current system export.
+
+The sooner I have this, the faster we can get you live!
+
+Thanks! 🥭
+
+${omName}`;
+                    break;
+            }
+            
+            window.currentEmailContent = emailContent;
+            document.getElementById('emailOutput').textContent = emailContent;
+            document.getElementById('outputSection').classList.add('show');
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function copyEmail() {
+            const emailText = document.getElementById('emailOutput').textContent;
+            navigator.clipboard.writeText(emailText).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+        
+        function openInSuperhuman() {
+            const emailText = window.currentEmailContent;
+            if (!emailText) return;
+            
+            navigator.clipboard.writeText(emailText).then(() => {
+                alert('✅ Email copied!\n\n📧 Next:\n1. Open Superhuman\n2. Press Cmd+K\n3. Press Cmd+V\n\nReady to send!');
+            });
+        }
+    </script>
+</body>
+</html>

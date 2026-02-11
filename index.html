@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mangomint Email Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #8B9FED 0%, #C195E8 40%, #F5A6D0 70%, #FFD0B5 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #8B9FED 0%, #C195E8 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 32px; margin-bottom: 8px; }
+        .header p { opacity: 0.95; font-size: 15px; }
+        .mango-emoji {
+            font-size: 40px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .content { padding: 35px; }
+        .ai-status {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .ai-status h3 { color: #92400e; font-size: 16px; margin-bottom: 6px; }
+        .ai-status p { color: #78350f; font-size: 13px; }
+        .ai-status.ready { background: #f0fdf4; border-color: #86efac; }
+        .ai-status.ready h3 { color: #16a34a; }
+        .ai-status.ready p { color: #15803d; }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            transition: width 0.3s;
+            width: 0%;
+        }
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(146,64,14,0.2);
+            border-top-color: #92400e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .spinner.white { border-color: rgba(255,255,255,0.3); border-top-color: white; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .form-section { margin-bottom: 25px; }
+        .form-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+        .form-section input,
+        .form-section select,
+        .form-section textarea {
+            width: 100%;
+            padding: 13px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .form-section input:focus,
+        .form-section select:focus,
+        .form-section textarea:focus {
+            outline: none;
+            border-color: #E54B97;
+            box-shadow: 0 0 0 3px rgba(229,75,151,0.1);
+        }
+        .form-section textarea { min-height: 140px; resize: vertical; }
+        .help-text { font-size: 12px; color: #666; margin-top: 5px; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-extract {
+            width: 100%;
+            background: #6366f1;
+            color: white;
+        }
+        .btn-extract:hover:not(:disabled) { background: #4f46e5; transform: translateY(-2px); }
+        .btn-extract:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-generate {
+            width: 100%;
+            background: linear-gradient(135deg, #E54B97 0%, #D43D8A 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(229,75,151,0.3);
+            margin-top: 10px;
+        }
+        .btn-generate:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(229,75,151,0.4); }
+        .btn-copy { background: #10b981; color: white; }
+        .btn-copy:hover { background: #059669; transform: translateY(-2px); }
+        .btn-copy.copied { background: #6366f1; }
+        .extracted-box {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: none;
+        }
+        .extracted-box.show { display: block; }
+        .extracted-box h4 { color: #16a34a; font-size: 15px; margin-bottom: 12px; }
+        .extracted-field { margin-bottom: 12px; }
+        .extracted-field label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .extracted-field input,
+        .extracted-field textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #86efac;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+        }
+        .extracted-field input:focus,
+        .extracted-field textarea:focus {
+            outline: none;
+            border-color: #E54B97;
+            box-shadow: 0 0 0 3px rgba(229,75,151,0.1);
+        }
+        .extracted-field textarea { min-height: 100px; resize: vertical; }
+        .divider { border: none; border-top: 2px solid #f0f0f0; margin: 30px 0; }
+        .output-container { margin-top: 30px; display: none; }
+        .output-container.show { display: block; }
+        .copy-box {
+            background: #fef8f4;
+            border: 2px solid #ffe8dc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .copy-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .copy-box-header h3 { color: #333; font-size: 16px; }
+        .copy-box-content {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            font-size: 14px;
+            color: #333;
+            min-height: 50px;
+            white-space: pre-wrap;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span class="mango-emoji">🥭</span> Email Generator</h1>
+            <p>Paste Momentum summary → AI extracts everything → Send in seconds</p>
+        </div>
+        
+        <div class="content">
+            <div id="aiStatus" class="ai-status">
+                <div class="spinner"></div>
+                <h3>Loading AI...</h3>
+                <p>First time: ~2 min download. After that: instant forever.</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText" style="margin-top: 8px; font-size: 12px;">Initializing...</p>
+            </div>
+
+            <div class="two-col">
+                <div class="form-section">
+                    <label for="omName">Your Name</label>
+                    <input type="text" id="omName" placeholder="e.g., Camryn">
+                    <div class="help-text">Saved automatically</div>
+                </div>
+                <div class="form-section">
+                    <label for="companyName">Company Name</label>
+                    <input type="text" id="companyName" placeholder="e.g., Luxe Salon & Spa">
+                    <div class="help-text">Fill in or AI will extract if mentioned</div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <label for="summary">📋 Paste Momentum Call Summary</label>
+                <textarea id="summary" placeholder="Paste the Momentum AI summary here...
+
+AI will extract:
+✓ Customer name & launch date
+✓ Customer's action items (clean, no names)
+✓ OM follow-ups → reframed as helpful resources"></textarea>
+                <div style="display: flex; gap: 12px; margin-top: 10px; align-items: center;">
+                    <button type="button" class="btn btn-extract" id="extractBtn" onclick="extractFromSummary()" disabled style="flex: 1; margin: 0;">
+                        <span class="spinner white" style="display:none;" id="extractSpinner"></span>
+                        <span id="extractBtnText">🤖 Extract from Summary</span>
+                    </button>
+                    <button type="button" class="btn" id="resetAIBtn" onclick="resetAI()" style="background:#9ca3af; color:white; display:none; white-space: nowrap; padding: 14px 20px; font-size: 13px;">
+                        Stuck? Click here
+                    </button>
+                </div>
+            </div>
+
+            <div id="extractedBox" class="extracted-box">
+                <h4>✓ Extracted — Review & Edit:</h4>
+                <div class="two-col">
+                    <div class="extracted-field">
+                        <label>Customer First Name</label>
+                        <input type="text" id="customerFirstName" placeholder="First name">
+                    </div>
+                    <div class="extracted-field">
+                        <label>Launch Date</label>
+                        <input type="text" id="launchDate" placeholder="e.g., March 2nd">
+                    </div>
+                </div>
+                <div class="extracted-field" style="margin-top: 10px;">
+                    <label>Customer Tasks (one per line)</label>
+                    <textarea id="customerTasks" placeholder="Tasks the customer needs to do..."></textarea>
+                </div>
+                <div class="extracted-field">
+                    <label>Resources to Include (one per line — reframed from OM follow-ups)</label>
+                    <textarea id="omResources" placeholder="Helpful links/resources for the customer..."></textarea>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <div class="form-section">
+                <label for="emailTemplate">Email Template</label>
+                <select id="emailTemplate">
+                    <option value="followup1">Follow-up | OB Call 1</option>
+                    <option value="followup2">Follow-up | OB Call 2</option>
+                    <option value="call1_scheduled">OB Call 1 Scheduled</option>
+                    <option value="missed_launch">Missed Launch Date</option>
+                    <option value="kickoff">Kickoff Meeting</option>
+                    <option value="training">Training Reminder</option>
+                    <option value="data_request">Data Request</option>
+                </select>
+            </div>
+
+            <div class="form-section">
+                <label for="extraContent">✨ Add a little extra?</label>
+                <select id="extraContent">
+                    <option value="none">None</option>
+                    <option value="peptalk">🎬 Pep Talk Video</option>
+                    <option value="gif_beyonce">💅 Beyoncé Hair Flip</option>
+                    <option value="gif_leo">🥂 Leo Cheers</option>
+                    <option value="gif_youdidit">🎊 You Did It! (Sophia Bush)</option>
+                    <option value="gif_confetti">🎊 Confetti Celebration</option>
+                </select>
+                <div class="help-text">Appears after your task list</div>
+            </div>
+
+            <button class="btn btn-generate" onclick="generateEmail()">✨ Generate Email</button>
+
+            <div class="output-container" id="outputContainer">
+                <div class="copy-box">
+                    <div class="copy-box-header">
+                        <h3>Subject Line</h3>
+                        <button class="btn btn-copy" id="copySubjectBtn" onclick="copySubject()">Copy Subject</button>
+                    </div>
+                    <div class="copy-box-content" id="subjectOutput"></div>
+                </div>
+                <div class="copy-box">
+                    <div class="copy-box-header">
+                        <h3>Email Body</h3>
+                        <button class="btn btn-copy" id="copyBodyBtn" onclick="copyBody()">Copy Email</button>
+                    </div>
+                    <div class="copy-box-content" id="bodyOutput"></div>
+                </div>
+                <p style="font-size: 13px; color: #888; text-align: center; margin-top: 10px;">
+                    📧 Superhuman: <strong>Shift+C</strong> → paste subject → paste body → send
+                </p>
+                <div id="embedPreview" style="display:none; margin-top: 16px; background: #f0f4ff; border: 2px dashed #6366f1; border-radius: 12px; padding: 20px; text-align: center;">
+                    <p style="font-size: 13px; font-weight: 600; color: #4338ca; margin-bottom: 12px;">🖱️ Drag this into Superhuman after pasting your email:</p>
+                    <div id="embedMedia"></div>
+                    <p style="font-size: 11px; color: #888; margin-top: 10px;">Drag the image above directly into the Superhuman compose window</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+        let engine = null;
+        let isAIReady = false;
+        let extractionCount = 0;
+
+        async function initAI() {
+            const statusEl = document.getElementById('aiStatus');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const extractBtn = document.getElementById('extractBtn');
+            const resetBtn = document.getElementById('resetAIBtn');
+            try {
+                engine = await CreateMLCEngine("Phi-3.5-mini-instruct-q4f16_1-MLC", {
+                    initProgressCallback: (p) => {
+                        if (p.progress) {
+                            const pct = Math.round(p.progress * 100);
+                            progressFill.style.width = pct + '%';
+                            progressText.textContent = `${pct}% loaded`;
+                        }
+                    }
+                });
+                isAIReady = true;
+                statusEl.className = 'ai-status ready';
+                statusEl.innerHTML = '<h3>✅ AI Ready</h3><p>Paste your Momentum summary and click Extract.</p>';
+                extractBtn.disabled = false;
+                resetBtn.style.display = 'inline-block';
+            } catch (err) {
+                console.error('WebLLM Init Error:', err);
+                statusEl.style.background = '#fef2f2';
+                statusEl.style.borderColor = '#fca5a5';
+                statusEl.innerHTML = '<h3 style="color:#991b1b;">⚠️ AI Loading Failed</h3><p style="color:#7f1d1d;">Check console for details. Fill fields manually below.</p>';
+            }
+        }
+
+        async function unloadAI() {
+            if (engine) {
+                try {
+                    await engine.unload();
+                    engine = null;
+                    isAIReady = false;
+                } catch (err) {
+                    console.error('Error unloading AI:', err);
+                }
+            }
+        }
+
+        window.resetAI = async function() {
+            const statusEl = document.getElementById('aiStatus');
+            const resetBtn = document.getElementById('resetAIBtn');
+            const extractBtn = document.getElementById('extractBtn');
+            
+            resetBtn.disabled = true;
+            extractBtn.disabled = true;
+            statusEl.className = 'ai-status';
+            statusEl.innerHTML = '<h3>🔄 Resetting AI...</h3><p>Clearing memory and reloading model...</p>';
+            
+            await unloadAI();
+            extractionCount = 0;
+            await initAI();
+            
+            resetBtn.disabled = false;
+        };
+
+        window.extractFromSummary = async function() {
+            const summary = document.getElementById('summary').value.trim();
+            const btn = document.getElementById('extractBtn');
+            const btnText = document.getElementById('extractBtnText');
+            const spinner = document.getElementById('extractSpinner');
+            const statusEl = document.getElementById('aiStatus');
+
+            if (!summary) { alert('Please paste a Momentum summary first.'); return; }
+            if (!isAIReady) { alert('AI still loading...'); return; }
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            btnText.textContent = 'Extracting...';
+
+            const omName = document.getElementById('omName').value.split(' ')[0] || 'OM';
+
+            const prompt = `Extract from this Mangomint onboarding call summary. Return ONLY valid JSON:
+
+{
+  "customerFirstName": "first name only",
+  "companyName": "business name or null",
+  "launchDate": "e.g. March 2nd or null",
+  "customerTasks": [
+    "Invite staff members to log in",
+    "Correct emails for Amy and Leslie on their profiles",
+    "Complete renters banking setup"
+  ],
+  "omResources": [
+    "Here is the link to add Mangomint to your website — send to your web person",
+    "Here is how to set up payment accounts for your staff"
+  ]
+}
+
+STRICT RULES:
+- customerTasks: tasks the CUSTOMER does themselves. Start with a verb. No names.
+- omResources: things ${omName} explicitly said they would SEND or SHARE during the call (links, documents, instructions). Write as "Here is [resource] — [brief instruction for customer]"
+- IGNORE the "Salesforce Task Creation" section - those are internal tasks, not resources being sent to the customer
+- CRITICAL: If ${omName} is sending instructions for a topic (e.g. website), do NOT also list that topic as a customer task. The resource replaces the task.
+- NO HALLUCINATION: Only extract resources ${omName} explicitly mentioned sending during the actual conversation. If ${omName} didn't offer to send something, omResources should be EMPTY [].
+- Do NOT invent or assume resources. Better to have 0 resources than made-up ones.
+- Internal scheduling tasks (like "Schedule Follow-ups") are NOT resources to send the customer.
+- No duplicate topics between customerTasks and omResources
+- No bullet points or names at start
+- Max 5 customer tasks, max 3 resources
+
+Summary:
+${summary}
+
+JSON only:`;
+
+            try {
+                const response = await engine.chat.completions.create({
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: 0.1,
+                    max_tokens: 600,
+                });
+
+                const content = response.choices[0].message.content;
+                const match = content.match(/\{[\s\S]*\}/);
+                if (!match) throw new Error('Could not parse response');
+                const data = JSON.parse(match[0]);
+
+                document.getElementById('customerFirstName').value = data.customerFirstName || '';
+                document.getElementById('launchDate').value = data.launchDate || '';
+
+                if (data.companyName && !document.getElementById('companyName').value) {
+                    document.getElementById('companyName').value = data.companyName;
+                }
+
+                document.getElementById('customerTasks').value = (data.customerTasks || []).join('\n');
+                document.getElementById('omResources').value = (data.omResources || []).join('\n');
+
+                document.getElementById('extractedBox').classList.add('show');
+                document.getElementById('extractedBox').scrollIntoView({ behavior: 'smooth' });
+
+                extractionCount++;
+
+                // Unload model after extraction to free memory
+                btnText.textContent = 'Clearing memory...';
+                await unloadAI();
+                
+                // Show status and reload for next use
+                statusEl.className = 'ai-status';
+                statusEl.innerHTML = '<h3>🔄 Reloading AI...</h3><p>Preparing for next extraction...</p>';
+                await initAI();
+
+            } catch (err) {
+                alert(`Extraction failed: ${err.message}\n\nFill fields manually below.`);
+                document.getElementById('extractedBox').classList.add('show');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = '🤖 Extract from Summary';
+            }
+        };
+
+        initAI();
+    </script>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('omName');
+            if (saved) document.getElementById('omName').value = saved;
+        });
+
+        document.getElementById('omName').addEventListener('change', e => {
+            localStorage.setItem('omName', e.target.value);
+        });
+
+        document.getElementById('extraContent').addEventListener('change', e => {
+            const val = e.target.value;
+            const preview = document.getElementById('embedPreview');
+            const media = document.getElementById('embedMedia');
+            if (!val || val === 'none') {
+                preview.style.display = 'none';
+                return;
+            }
+            const item = extraContentMap[val];
+            if (!item) return;
+            if (val === 'peptalk') {
+                media.innerHTML = `<a href="${item.plain.split('\n')[1]}" target="_blank"><img src="https://embed-ssl.wistia.com/deliveries/q7pmpq6ld9.jpg" style="max-width:300px; border-radius:8px; cursor:grab; border: 2px solid #6366f1;" draggable="true" alt="Pep talk video thumbnail"></a>`;
+            } else {
+                const url = item.plain.split(' ').pop();
+                media.innerHTML = `<img src="${url}" style="max-width:300px; border-radius:8px; cursor:grab;" draggable="true" alt="GIF">`;
+            }
+            preview.style.display = 'block';
+        });
+
+        const learnMap = {
+            // Staff — specific first
+            'invite staff': 'https://www.mangomint.com/learn/adding-a-staff-member/',
+            'staff permission': 'https://www.mangomint.com/learn/staff-member-permissions/',
+            'staff compensation': 'https://www.mangomint.com/learn/service-and-product-commission/',
+            'staff hours': 'https://www.mangomint.com/learn/staff-member-work-hours/',
+            'time clock': 'https://www.mangomint.com/learn/set-up-the-time-clock-and-assign-pins-to-staff/',
+            'archive staff': 'https://www.mangomint.com/learn/archiving-staff-members/',
+            'staff': 'https://www.mangomint.com/learn/adding-a-staff-member/',
+            'invite': 'https://www.mangomint.com/learn/adding-a-staff-member/',
+            // Staff payment accounts — MUST come before generic payment keywords
+            'payment account for staff': 'https://www.mangomint.com/learn/how-to-set-up-a-payment-account-for-a-staff-member/',
+            'payment accounts for staff': 'https://www.mangomint.com/learn/how-to-set-up-a-payment-account-for-a-staff-member/',
+            'set up payment account': 'https://www.mangomint.com/learn/how-to-set-up-a-payment-account-for-a-staff-member/',
+            'banking setup': 'https://www.mangomint.com/learn/how-to-set-up-a-payment-account-for-a-staff-member/',
+            'renter': 'https://www.mangomint.com/learn/how-to-set-up-a-payment-account-for-a-staff-member/',
+            'bank account': 'https://www.mangomint.com/learn/how-to-set-up-a-payment-account-for-a-staff-member/',
+            // Payment processing — generic
+            'payment processing': 'https://www.mangomint.com/learn/signing-up-for-payment-processing/',
+            'mangomint pay': 'https://www.mangomint.com/learn/signing-up-for-payment-processing/',
+            'stripe': 'https://www.mangomint.com/learn/signing-up-for-payment-processing/',
+            'sign up for payment': 'https://www.mangomint.com/learn/signing-up-for-payment-processing/',
+            // Hardware
+            'front desk display': 'https://www.mangomint.com/learn/setting-up-your-front-desk-display/',
+            'front desk': 'https://www.mangomint.com/learn/setting-up-your-front-desk-display/',
+            'ipad': 'https://www.mangomint.com/learn/setting-up-your-front-desk-display/',
+            'card reader': 'https://www.mangomint.com/learn/setting-up-your-front-desk-display/',
+            'hardware': 'https://www.mangomint.com/learn/front-desk-display-hardware-purchase-guide/',
+            'equipment': 'https://www.mangomint.com/learn/front-desk-display-hardware-purchase-guide/',
+            // Online booking — website platform specific first
+            'shopify': 'https://www.mangomint.com/learn/setting-up-online-booking-for-a-shopify-website/',
+            'squarespace': 'https://www.mangomint.com/learn/setting-up-online-booking-for-a-squarespace-website/',
+            'wix': 'https://www.mangomint.com/learn/setting-up-online-booking-for-a-wix-website/',
+            'wordpress': 'https://www.mangomint.com/learn/setting-up-online-booking-for-a-wordpress-website/',
+            'website': 'https://www.mangomint.com/learn/adding-online-booking-to-your-website/',
+            'online booking': 'https://www.mangomint.com/learn/adding-online-booking-to-your-website/',
+            'overlay': 'https://www.mangomint.com/learn/adding-online-booking-to-your-website/',
+            'web person': 'https://www.mangomint.com/learn/adding-online-booking-to-your-website/',
+            'booking link': 'https://www.mangomint.com/learn/using-direct-booking-links/',
+            'google business': 'https://www.mangomint.com/learn/add-booking-link-to-google-business-profile/',
+            // Clients
+            'merge duplicate': 'https://www.mangomint.com/learn/how-to-merge-duplicate-clients/',
+            'merge': 'https://www.mangomint.com/learn/how-to-merge-duplicate-clients/',
+            'duplicate client': 'https://www.mangomint.com/learn/how-to-merge-duplicate-clients/',
+            'import client': 'https://www.mangomint.com/learn/importing-clients/',
+            'import': 'https://www.mangomint.com/learn/importing-clients/',
+            'client list': 'https://www.mangomint.com/learn/navigating-the-client-list/',
+            // Booth renters
+            'booth renter': 'https://www.mangomint.com/learn/transitioning-to-booth-renter-model/',
+            'booth': 'https://www.mangomint.com/learn/transitioning-to-booth-renter-model/',
+            // Services
+            'service menu': 'https://www.mangomint.com/learn/add-categories-and-services/',
+            'assign service': 'https://www.mangomint.com/learn/link-services-to-staff-members/',
+            'services': 'https://www.mangomint.com/learn/add-categories-and-services/',
+            // Memberships
+            'transfer membership': 'https://www.mangomint.com/learn/how-do-i-transfer-memberships-from-my-old-booking-system/',
+            'membership': 'https://www.mangomint.com/learn/set-up-a-membership-plan/',
+            // Gift cards
+            'gift card': 'https://www.mangomint.com/learn/how-to-sell-a-gift-card/',
+            // Packages
+            'package': 'https://www.mangomint.com/learn/how-to-create-a-package/',
+            // Forms
+            'intake form': 'https://www.mangomint.com/learn/creating-form-templates/',
+            'forms': 'https://www.mangomint.com/learn/creating-form-templates/',
+            // Automated messages
+            'automated message': 'https://www.mangomint.com/learn/enabling-and-disabling-automated-messages/',
+            'client messaging': 'https://www.mangomint.com/learn/enabling-and-disabling-automated-messages/',
+            'reminder': 'https://www.mangomint.com/learn/enabling-and-disabling-automated-messages/',
+            'notification': 'https://www.mangomint.com/learn/enabling-and-disabling-automated-messages/',
+            'messaging': 'https://www.mangomint.com/learn/enabling-and-disabling-automated-messages/',
+            // Calendar & hours
+            'calendar': 'https://www.mangomint.com/learn/calendar-basics-and-views/',
+            'hours': 'https://www.mangomint.com/learn/setting-up-hours-in-mangomint/',
+            // Payroll
+            'payroll': 'https://www.mangomint.com/learn/signing-up-for-payroll-processing/',
+        };
+
+        function addLinks(line) {
+            line = line.replace(/^[•\-\*\d\.]+\s*/, '').trim();
+            const lower = line.toLowerCase();
+            // Sort by keyword length descending — longest/most specific match wins
+            const sorted = Object.entries(learnMap).sort((a, b) => b[0].length - a[0].length);
+            for (const [kw, url] of sorted) {
+                if (lower.includes(kw)) return `• ${line} — ${url}`;
+            }
+            return `• ${line}`;
+        }
+
+        function formatAllTasks() {
+            const customerLines = document.getElementById('customerTasks').value
+                .split('\n').map(l => l.trim()).filter(l => l);
+            const resourceLines = document.getElementById('omResources').value
+                .split('\n').map(l => l.trim()).filter(l => l);
+
+            const customerFormatted = customerLines.map(l => addLinks(l)).join('\n');
+            const resourceFormatted = resourceLines.map(l => addLinks(l)).join('\n');
+
+            if (customerFormatted && resourceFormatted) {
+                return customerFormatted + '\n' + resourceFormatted;
+            }
+            return customerFormatted || resourceFormatted;
+        }
+
+        const extraContentMap = {
+            peptalk: {
+                label: '🎬 Watch this quick pep talk from our team — we are rooting for you!',
+                html: `<div style="text-align:center; margin: 20px 0;"><a href="https://mangomint.wistia.com/medias/q7pmpq6ld9" target="_blank"><img src="https://embed-ssl.wistia.com/deliveries/q7pmpq6ld9.jpg" width="480" style="border-radius:8px; display:block; margin:0 auto;" alt="Pep talk video"></a></div>`,
+                plain: '🎬 Watch this quick pep talk from our team — we are rooting for you!\nhttps://mangomint.wistia.com/medias/q7pmpq6ld9'
+            },
+            gif_beyonce: {
+                label: '💅 Slay the day:',
+                html: `<div style="text-align:center; margin: 20px 0;"><img src="https://media.giphy.com/media/xTiTntms3qRxEGs31S/giphy.gif" width="100%" style="max-width:480px; border-radius:8px;" alt="Beyonce hair flip"></div>`,
+                plain: '💅 https://media.giphy.com/media/xTiTntms3qRxEGs31S/giphy.gif'
+            },
+            gif_leo: {
+                label: '🥂 Almost time to celebrate:',
+                html: `<div style="text-align:center; margin: 20px 0;"><img src="https://media.giphy.com/media/l49JXTYPlm0ABKYzS/giphy.gif" width="100%" style="max-width:480px; border-radius:8px;" alt="Leo cheers"></div>`,
+                plain: '🥂 https://media.giphy.com/media/l49JXTYPlm0ABKYzS/giphy.gif'
+            },
+            gif_youdidit: {
+                label: '🎊 You did it!',
+                html: `<div style="text-align:center; margin: 20px 0;"><img src="https://media.giphy.com/media/f9RHPRFxJhKTF0MQth/giphy.gif" width="100%" style="max-width:480px; border-radius:8px;" alt="You did it!"></div>`,
+                plain: '🎊 https://media.giphy.com/media/f9RHPRFxJhKTF0MQth/giphy.gif'
+            },
+            gif_confetti: {
+                label: '🎊 You did it!',
+                html: `<div style="text-align:center; margin: 20px 0;"><img src="https://media.giphy.com/media/l22UZKdvTfLXKrZZws/giphy.gif" width="100%" style="max-width:480px; border-radius:8px;" alt="Confetti celebration"></div>`,
+                plain: '🎊 https://media.giphy.com/media/l22UZKdvTfLXKrZZws/giphy.gif'
+            }
+        };
+
+        function getExtraContentPlain() {
+            const val = document.getElementById('extraContent').value;
+            if (!val || val === 'none') return '';
+            const item = extraContentMap[val];
+            if (!item) return '';
+            return `\n${item.plain}`;
+        }
+
+        function getExtraContentHTML() {
+            const val = document.getElementById('extraContent').value;
+            if (!val || val === 'none') return '';
+            const item = extraContentMap[val];
+            if (!item) return '';
+            return item.html;
+        }
+
+        function getExtraContent() {
+            return getExtraContentPlain();
+        }
+
+        function generateEmail() {
+            const tmpl = document.getElementById('emailTemplate').value;
+            const first = document.getElementById('customerFirstName').value || '[Name]';
+            const co = document.getElementById('companyName').value || '[Company]';
+            const date = document.getElementById('launchDate').value || '[launch date]';
+            const om = document.getElementById('omName').value || '[Your Name]';
+            const tasks = formatAllTasks();
+
+            let subj = '', body = '';
+
+            switch(tmpl) {
+                case 'followup1':
+                    subj = `Call Recap | ${co} x Mangomint`;
+                    body = `Hi ${first},
+
+Thanks for your time this afternoon. It was great to chat with you!
+
+Please refer to your Get Started page to keep you on track for your ${date} launch date. Please check tasks off as you go so I can track your progress.
+
+Here are your next steps before our next call:
+${tasks || '• [Add tasks]'}
+${getExtraContent()}
+Reach out if you need anything! 🥭
+
+${om}`;
+                    break;
+
+                case 'followup2':
+                    subj = `You're almost there 🚀 | ${co} x Mangomint`;
+                    body = `Hi ${first}!
+
+It was so good to connect with you today!
+
+You're still right on track for your ${date} launch date. Please check your tasks off as you go so I can track your progress.
+
+Here are your tasks before our next call:
+${tasks || '• [Add tasks]'}
+${getExtraContent()}
+I'll see you soon. Email or text if you have any questions!
+
+${om}`;
+                    break;
+
+                case 'call1_scheduled':
+                    subj = `Your Onboarding Session | ${co} x Mangomint`;
+                    body = `Hi ${first}!
+
+Thank you for booking your onboarding session! I can't wait to chat with you.
+
+When it's time, simply hop on your computer and join me in the meeting room in your calendar invite.
+
+During our call, we'll start piecing everything together to kickstart your journey with Mangomint. We'll cover everything from transferring your data to setting up payments & POS, and I'll be here to answer any questions you may have.
+
+Need anything before our meeting? Just drop me a line! 😎
+
+Excited to chat soon!
+
+${om}`;
+                    break;
+
+                case 'missed_launch':
+                    subj = `🔒 Let's lock in a new launch date`;
+                    body = `Hey there,
+
+Looks like our original launch date didn't quite stick – no worries! Let's set a new one and realign on the remaining tasks.
+
+Here's what's left to wrap up:
+${tasks || '• [List tasks]'}
+${getExtraContent()}
+Let me know your thoughts on a new date and we'll keep things moving forward.
+
+Best,
+${om}`;
+                    break;
+
+                case 'kickoff':
+                    subj = `Kickoff Call Scheduled | ${co} x Mangomint`;
+                    body = `Hi ${first},
+
+I'm excited to confirm our kickoff meeting for ${co}!
+
+During this call, we'll walk through your Mangomint account setup, discuss your business processes, review your ${date} launch timeline, and answer any questions.
+
+To make the most of our time, please have ready:
+• Your current booking/scheduling process
+• List of services you offer
+• Staff member names and roles
+${getExtraContent()}
+If this time doesn't work, just let me know!
+
+Looking forward to it! 🥭
+
+${om}`;
+                    break;
+
+                case 'training':
+                    subj = `Training Session Reminder | ${co} x Mangomint`;
+                    body = `Hi ${first},
+
+Friendly reminder about your training session for ${co}!
+
+We'll cover calendar management, processing payments, client features, and best practices. Please have your team join - the more people attend, the smoother your ${date} launch!
+${getExtraContent()}
+See you soon! 🥭
+
+${om}`;
+                    break;
+
+                case 'data_request':
+                    subj = `Data Collection | ${co} x Mangomint`;
+                    body = `Hi ${first},
+
+As we prepare for your ${date} launch, I need to collect some information:
+
+${tasks || '• Client list (names, contact info)\n• Service menu with pricing\n• Staff schedules'}
+${getExtraContent()}
+Send in whatever format works best - spreadsheet, CSV, or your current system export.
+
+The sooner I have this, the faster we can get you live!
+
+Thanks! 🥭
+
+${om}`;
+                    break;
+            }
+
+            window.currentSubject = subj;
+            window.currentBody = body;
+            document.getElementById('subjectOutput').textContent = subj;
+            document.getElementById('bodyOutput').textContent = body;
+            document.getElementById('outputContainer').classList.add('show');
+            document.getElementById('outputContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copySubject() {
+            navigator.clipboard.writeText(window.currentSubject).then(() => {
+                const btn = document.getElementById('copySubjectBtn');
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = 'Copy Subject'; btn.classList.remove('copied'); }, 2000);
+            });
+        }
+
+        function copyBody() {
+            navigator.clipboard.writeText(window.currentBody).then(() => {
+                const btn = document.getElementById('copyBodyBtn');
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = 'Copy Email'; btn.classList.remove('copied'); }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
